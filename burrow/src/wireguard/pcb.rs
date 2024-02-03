@@ -62,7 +62,7 @@ impl PeerPcb {
             tracing::debug!("{}: waiting for packet", rid);
             let guard = self.socket.read().await;
             let Some(socket) = guard.as_ref() else {
-                continue
+                continue;
             };
             let mut res_buf = [0; 1500];
             // tracing::debug!("{} : waiting for readability on {:?}", rid, socket);
@@ -70,7 +70,7 @@ impl PeerPcb {
                 Ok(l) => l,
                 Err(e) => {
                     log::error!("{}: error reading from socket: {:?}", rid, e);
-                    continue
+                    continue;
                 }
             };
             let mut res_dat = &res_buf[..len];
@@ -86,7 +86,7 @@ impl PeerPcb {
                     TunnResult::Done => break,
                     TunnResult::Err(e) => {
                         tracing::error!(message = "Decapsulate error", error = ?e);
-                        break
+                        break;
                     }
                     TunnResult::WriteToNetwork(packet) => {
                         tracing::debug!("WriteToNetwork: {:?}", packet);
@@ -94,17 +94,17 @@ impl PeerPcb {
                         socket.send(packet).await?;
                         tracing::debug!("WriteToNetwork done");
                         res_dat = &[];
-                        continue
+                        continue;
                     }
                     TunnResult::WriteToTunnelV4(packet, addr) => {
                         tracing::debug!("WriteToTunnelV4: {:?}, {:?}", packet, addr);
                         tun_interface.read().await.send(packet).await?;
-                        break
+                        break;
                     }
                     TunnResult::WriteToTunnelV6(packet, addr) => {
                         tracing::debug!("WriteToTunnelV6: {:?}, {:?}", packet, addr);
                         tun_interface.read().await.send(packet).await?;
-                        break
+                        break;
                     }
                 }
             }
@@ -123,7 +123,7 @@ impl PeerPcb {
                 let handle = self.socket.read().await;
                 let Some(socket) = handle.as_ref() else {
                     tracing::error!("No socket for peer");
-                    return Ok(())
+                    return Ok(());
                 };
                 tracing::debug!("Our Encapsulated packet: {:?}", packet);
                 socket.send(packet).await?;

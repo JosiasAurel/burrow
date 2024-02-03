@@ -116,6 +116,20 @@ impl TunInterface {
 
     #[throws]
     #[instrument]
+    pub fn ipv6_addrs(&self) -> Vec<Ipv6Addr> {
+        let socket_addrs = self.ip_addrs()?;
+        let mut ip_addrs: Vec<IpAddr> = vec![];
+
+        for item in socket_addrs.iter() {
+            if item.is_ipv6() {
+                ip_addrs.push(*item);
+            }
+        }
+        ip_addrs
+    }
+
+    #[throws]
+    #[instrument]
     pub fn set_broadcast_addr(&self, addr: Ipv4Addr) {
         let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
         let mut iff = self.ifreq()?;

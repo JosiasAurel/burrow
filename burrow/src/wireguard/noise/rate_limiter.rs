@@ -12,19 +12,9 @@ use ring::constant_time::verify_slices_are_equal;
 
 use super::{
     handshake::{
-        b2s_hash,
-        b2s_keyed_mac_16,
-        b2s_keyed_mac_16_2,
-        b2s_mac_24,
-        LABEL_COOKIE,
-        LABEL_MAC1,
+        b2s_hash, b2s_keyed_mac_16, b2s_keyed_mac_16_2, b2s_mac_24, LABEL_COOKIE, LABEL_MAC1,
     },
-    HandshakeInit,
-    HandshakeResponse,
-    Packet,
-    TunnResult,
-    Tunnel,
-    WireGuardError,
+    HandshakeInit, HandshakeResponse, Packet, TunnResult, Tunnel, WireGuardError,
 };
 
 const COOKIE_REFRESH: u64 = 128; // Use 128 and not 120 so the compiler can optimize out the division
@@ -136,7 +126,7 @@ impl RateLimiter {
         dst: &'a mut [u8],
     ) -> Result<&'a mut [u8], WireGuardError> {
         if dst.len() < super::COOKIE_REPLY_SZ {
-            return Err(WireGuardError::DestinationBufferTooSmall)
+            return Err(WireGuardError::DestinationBufferTooSmall);
         }
 
         let (message_type, rest) = dst.split_at_mut(4);
@@ -202,7 +192,7 @@ impl RateLimiter {
                     let cookie_packet = self
                         .format_cookie_reply(sender_idx, cookie, mac1, dst)
                         .map_err(TunnResult::Err)?;
-                    return Err(TunnResult::WriteToNetwork(cookie_packet))
+                    return Err(TunnResult::WriteToNetwork(cookie_packet));
                 }
             }
         }

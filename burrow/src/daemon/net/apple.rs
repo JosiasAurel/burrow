@@ -26,7 +26,7 @@ pub extern "C" fn start_srv() {
         start_recv.notified().await;
         match DaemonClient::new().await {
             Ok(..) => info!("Server successfully started"),
-            Err(e) => error!("Could not connect to server: {}", e)
+            Err(e) => error!("Could not connect to server: {}", e),
         }
     });
 }

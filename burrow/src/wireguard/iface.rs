@@ -84,7 +84,7 @@ impl Interface {
                         Ok(len) => &buf[..len],
                         Err(e) => {
                             error!("Failed to read from interface: {}", e);
-                            continue
+                            continue;
                         }
                     };
                     debug!("Read {} bytes from interface", src.len());
@@ -95,14 +95,14 @@ impl Interface {
                     Some(addr) => addr,
                     None => {
                         debug!("No destination found");
-                        continue
+                        continue;
                     }
                 };
 
                 debug!("Routing packet to {}", dst_addr);
 
                 let Some(idx) = pcbs.find(dst_addr) else {
-                    continue
+                    continue;
                 };
 
                 debug!("Found peer:{}", idx);
@@ -114,7 +114,7 @@ impl Interface {
                     }
                     Err(e) => {
                         log::error!("Failed to send packet {}", e);
-                        continue
+                        continue;
                     }
                 };
             }
@@ -138,7 +138,7 @@ impl Interface {
                 let tsk = async move {
                     if let Err(e) = pcb.open_if_closed().await {
                         log::error!("failed to open pcb: {}", e);
-                        return
+                        return;
                     }
                     let r2 = pcb.run(tun).await;
                     if let Err(e) = r2 {

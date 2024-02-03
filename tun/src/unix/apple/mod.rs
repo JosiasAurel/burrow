@@ -1,7 +1,7 @@
 use std::{
     io::{Error, IoSlice},
-    mem,
-    net::{Ipv4Addr, SocketAddrV4},
+    mem::{self, zeroed, MaybeUninit},
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddrV4, SocketAddrV6},
     os::fd::{AsRawFd, FromRawFd, RawFd},
 };
 
@@ -18,7 +18,7 @@ use kern_control::SysControlSocket;
 
 pub use super::queue::TunQueue;
 use super::{ifname_to_string, string_to_ifname};
-use crate::TunOptions;
+use crate::{syscall, TunOptions};
 
 #[derive(Debug)]
 pub struct TunInterface {
@@ -135,6 +135,20 @@ impl TunInterface {
         self.perform(|fd| unsafe { sys::if_get_addr(fd, &mut iff) })?;
         let addr = unsafe { *(&iff.ifr_ifru.ifru_addr as *const _ as *const sys::sockaddr_in) };
         Ipv4Addr::from(u32::from_be(addr.sin_addr.s_addr))
+    }
+
+    #[throws]
+    #[instrument]
+    pub fn ipv6_addrs(&self) -> Vec<IpAddr> {
+        let socket_addrs = self.ip_addrs()?;
+        let mut ip_addrs: Vec<IpAddr> = vec![];
+
+        for item in socket_addrs.iter() {
+            if item.is_ipv6() {
+                ip_addrs.push(*item);
+            }
+        }
+        ip_addrs
     }
 
     #[throws]

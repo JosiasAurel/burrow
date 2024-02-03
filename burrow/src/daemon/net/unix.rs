@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use std::{
     io,
     os::{
@@ -6,7 +7,6 @@ use std::{
     },
     path::{Path, PathBuf},
 };
-use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
 use tokio::{
@@ -15,9 +15,9 @@ use tokio::{
 };
 use tracing::{debug, info};
 
-use tokio::sync::Notify;
 use super::*;
 use crate::daemon::{DaemonCommand, DaemonResponse, DaemonResponseData};
+use tokio::sync::Notify;
 
 #[cfg(not(target_vendor = "apple"))]
 const UNIX_SOCKET_PATH: &str = "/run/burrow.sock";
@@ -38,7 +38,7 @@ fn fetch_socket_path() -> Option<PathBuf> {
     for path in tries {
         let path = PathBuf::from(path);
         if path.exists() {
-            return Some(path)
+            return Some(path);
         }
     }
     None
@@ -52,7 +52,7 @@ fn fetch_socket_path() -> Option<PathBuf> {
 pub async fn listen(
     cmd_tx: async_channel::Sender<DaemonCommand>,
     rsp_rx: async_channel::Receiver<DaemonResponse>,
-    notify: Option<Arc<Notify>>
+    notify: Option<Arc<Notify>>,
 ) -> Result<()> {
     listen_with_optional_fd(cmd_tx, rsp_rx, None, notify).await
 }
@@ -61,7 +61,7 @@ pub(crate) async fn listen_with_optional_fd(
     cmd_tx: async_channel::Sender<DaemonCommand>,
     rsp_rx: async_channel::Receiver<DaemonResponse>,
     raw_fd: Option<RawFd>,
-    notify: Option<Arc<Notify>>
+    notify: Option<Arc<Notify>>,
 ) -> Result<()> {
     let path = Path::new(UNIX_SOCKET_PATH);
 

@@ -5,12 +5,7 @@ pub mod wireguard;
 mod daemon;
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 pub use daemon::{
-    DaemonClient,
-    DaemonCommand,
-    DaemonResponse,
-    DaemonResponseData,
-    DaemonStartOptions,
-    ServerInfo,
+    DaemonClient, DaemonCommand, DaemonResponse, DaemonResponseData, DaemonStartOptions, ServerInfo,
 };
 
 #[cfg(target_vendor = "apple")]

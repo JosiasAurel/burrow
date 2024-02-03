@@ -10,7 +10,7 @@ use crate::daemon::DaemonResponse;
 pub async fn listen(
     cmd_tx: async_channel::Sender<DaemonCommand>,
     rsp_rx: async_channel::Receiver<DaemonResponse>,
-    notify: Option<Arc<Notify>>
+    notify: Option<Arc<Notify>>,
 ) -> Result<()> {
     if !libsystemd::daemon::booted()
         || listen_with_systemd(cmd_tx.clone(), rsp_rx.clone())
@@ -27,7 +27,8 @@ async fn listen_with_systemd(
     rsp_rx: async_channel::Receiver<DaemonResponse>,
 ) -> Result<()> {
     let fds = libsystemd::activation::receive_descriptors(false)?;
-    super::unix::listen_with_optional_fd(cmd_tx, rsp_rx, Some(fds[0].clone().into_raw_fd()), None).await
+    super::unix::listen_with_optional_fd(cmd_tx, rsp_rx, Some(fds[0].clone().into_raw_fd()), None)
+        .await
 }
 
 pub type DaemonClient = unix::DaemonClient;
