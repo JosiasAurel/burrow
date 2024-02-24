@@ -8,10 +8,11 @@ enum BurrowError: Error {
     case resultIsNone
 }
 
-protocol Request: Codable where CommandT: Codable {
-    associatedtype CommandT
+protocol Request: Codable where Command: Codable {
+    associatedtype Command
+
     var id: UInt { get set }
-    var command: CommandT { get set }
+    var command: Command { get set }
 }
 
 struct BurrowSingleCommand: Request {
@@ -30,19 +31,12 @@ struct BurrowStartRequest: Codable {
         let no_pi: Bool
         let tun_excl: Bool
         let tun_retrieve: Bool
-        let address: String?
+        let address: [String]
     }
     struct StartOptions: Codable {
         let tun: TunOptions
     }
     let Start: StartOptions
-}
-
-func start_req_fd(id: UInt) -> BurrowRequest<BurrowStartRequest> {
-    let command = BurrowStartRequest(Start: BurrowStartRequest.StartOptions(
-        tun: BurrowStartRequest.TunOptions(name: nil, no_pi: false, tun_excl: false, tun_retrieve: true, address: nil)
-    ))
-    return BurrowRequest(id: id, command: command)
 }
 
 struct Response<T>: Decodable where T: Decodable {
@@ -57,7 +51,7 @@ struct BurrowResult<T>: Codable where T: Codable {
 
 struct ServerConfigData: Codable {
     struct InternalConfig: Codable {
-        let address: String?
+        let address: [String]
         let name: String?
         let mtu: Int32?
     }

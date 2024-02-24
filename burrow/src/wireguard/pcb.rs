@@ -1,6 +1,6 @@
 use std::{net::SocketAddr, sync::Arc};
 
-use anyhow::Error;
+use anyhow::{Error, Result};
 use fehler::throws;
 use ip_network::IpNetwork;
 use rand::random;
@@ -11,6 +11,7 @@ use super::{
     noise::{TunnResult, Tunnel},
     Peer,
 };
+use crate::wireguard::noise::errors::WireGuardError;
 
 #[derive(Debug)]
 pub struct PeerPcb {
@@ -62,7 +63,8 @@ impl PeerPcb {
             tracing::debug!("{}: waiting for packet", rid);
             let guard = self.socket.read().await;
             let Some(socket) = guard.as_ref() else {
-                continue;
+                self.open_if_closed().await?;
+                continue
             };
             let mut res_buf = [0; 1500];
             // tracing::debug!("{} : waiting for readability on {:?}", rid, socket);
@@ -91,7 +93,13 @@ impl PeerPcb {
                     TunnResult::WriteToNetwork(packet) => {
                         tracing::debug!("WriteToNetwork: {:?}", packet);
                         self.open_if_closed().await?;
-                        socket.send(packet).await?;
+                        self.socket
+                            .read()
+                            .await
+                            .as_ref()
+                            .unwrap()
+                            .send(packet)
+                            .await?;
                         tracing::debug!("WriteToNetwork done");
                         res_dat = &[];
                         continue;
@@ -112,9 +120,12 @@ impl PeerPcb {
     }
 
     pub async fn send(&self, src: &[u8]) -> Result<(), Error> {
+        tracing::debug!("Sending packet: {:?}", src);
         let mut dst_buf = [0u8; 3000];
         match self.tunnel.write().await.encapsulate(src, &mut dst_buf[..]) {
-            TunnResult::Done => {}
+            TunnResult::Done => {
+                tracing::debug!("Encapsulate done");
+            }
             TunnResult::Err(e) => {
                 tracing::error!(message = "Encapsulate error", error = ?e)
             }
@@ -131,5 +142,32 @@ impl PeerPcb {
             _ => panic!("Unexpected result from encapsulate"),
         };
         Ok(())
+    }
+
+    pub async fn update_timers(&self, dst: &mut [u8]) -> Result<(), Error> {
+        match self.tunnel.write().await.update_timers(dst) {
+            TunnResult::Done => {}
+            TunnResult::Err(WireGuardError::ConnectionExpired) => {}
+            TunnResult::Err(e) => {
+                tracing::error!(message = "Update timers error", error = ?e)
+            }
+            TunnResult::WriteToNetwork(packet) => {
+                tracing::debug!("Sending Packet for timer update: {:?}", packet);
+                self.open_if_closed().await?;
+                let handle = self.socket.read().await;
+                let Some(socket) = handle.as_ref() else {
+                    tracing::error!("No socket for peer");
+                    return Ok(())
+                };
+                socket.send(packet).await?;
+                tracing::debug!("Sent Packet for timer update");
+            }
+            _ => panic!("Unexpected result from update_timers"),
+        };
+        Ok(())
+    }
+
+    pub async fn reset_rate_limiter(&self) {
+        self.tunnel.read().await.reset_rate_limiter();
     }
 }

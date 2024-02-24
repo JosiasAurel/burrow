@@ -44,9 +44,7 @@ const MAX_QUEUE_DEPTH: usize = 256;
 const N_SESSIONS: usize = 8;
 
 pub mod x25519 {
-    pub use x25519_dalek::{
-        EphemeralSecret, PublicKey, ReusableSecret, SharedSecret, StaticSecret,
-    };
+    pub use x25519_dalek::{PublicKey, ReusableSecret, SharedSecret, StaticSecret};
 }
 
 #[derive(Debug)]
@@ -340,6 +338,10 @@ impl Tunnel {
         };
 
         self.handle_verified_packet(packet, dst)
+    }
+
+    pub fn reset_rate_limiter(&self) {
+        self.rate_limiter.reset_count();
     }
 
     pub(crate) fn handle_verified_packet<'a>(
