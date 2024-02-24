@@ -33,17 +33,11 @@ fn test_set_get_broadcast_addr() {
 fn test_set_get_ipv4() {
     let tun = TunInterface::new()?;
 
-    let addr = Ipv4Addr::new(10, 0, 1, 1);
+    let addr = Ipv4Addr::new(10, 0, 0, 1);
     tun.set_ipv4_addr(addr)?;
     let result = tun.ipv4_addr()?;
 
-    let IpAddr::V4(result2) = tun.ip_addrs()?[0] else {
-        unimplemented!()
-    };
-
     assert_eq!(addr, result);
-    // assert_eq!(addr, result2);
-    println!("{}", result);
 }
 
 #[test]
@@ -57,7 +51,7 @@ fn test_set_get_ipv6() {
     let addr = Ipv6Addr::new(1, 1, 1, 1, 1, 1, 1, 1);
     tun.set_ipv6_addr(addr)?;
 
-    let result = tun.ipv6_addr()?;
+    let result = tun.ipv6_addrs()?;
     assert_eq!(addr, result);
 }
 
